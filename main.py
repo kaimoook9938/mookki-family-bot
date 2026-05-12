@@ -280,7 +280,6 @@ async def webhook(request: Request):
         # =========================
         # IMAGE MESSAGE
         # =========================
-
         if message_type == "image":
 
             try:
@@ -315,12 +314,6 @@ async def webhook(request: Request):
                     summary
                 )
 
-                # ส่งรูปเข้ากลุ่ม
-                push_image_to_group(
-                    real_name,
-                    image_url
-                )
-
                 # ตอบกลับ
                 reply_message(
                     reply_token,
@@ -334,35 +327,6 @@ async def webhook(request: Request):
                 reply_message(
                     reply_token,
                     "ส่งรูปไม่สำเร็จ 😭"
-                )
-
-        # =========================
-        # TEXT MESSAGE
-        # =========================
-
-        elif message_type == "text":
-
-            try:
-
-                user_text = event["message"]["text"]
-
-                push_message(
-                    FAMILY_GROUP_ID,
-                    user_text
-                )
-
-                reply_message(
-                    reply_token,
-                    "ส่งข้อความเข้ากลุ่มแล้ว 😼"
-                )
-
-            except Exception as e:
-
-                print("ERROR:", e)
-
-                reply_message(
-                    reply_token,
-                    "ส่งข้อความไม่สำเร็จ 😭"
                 )
 
     return {"status": "ok"}
