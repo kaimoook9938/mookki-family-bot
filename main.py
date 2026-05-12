@@ -5,18 +5,33 @@ import requests
 import os
 import base64
 
-app = FastAPI()
+# =========================
+# LOAD ENV
+# =========================
 
 load_dotenv()
 
+CHANNEL_ACCESS_TOKEN = os.getenv(
+    "CHANNEL_ACCESS_TOKEN"
+)
+
+FAMILY_GROUP_ID = os.getenv(
+    "FAMILY_GROUP_ID"
+)
+
+IMGBB_API_KEY = os.getenv(
+    "IMGBB_API_KEY"
+)
+
+OPENAI_API_KEY = os.getenv(
+    "OPENAI_API_KEY"
+)
+
 # =========================
-# ENV
+# APP
 # =========================
 
-CHANNEL_ACCESS_TOKEN = os.getenv("CHANNEL_ACCESS_TOKEN")
-FAMILY_GROUP_ID = os.getenv("FAMILY_GROUP_ID")
-IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+app = FastAPI()
 
 # =========================
 # OPENAI
@@ -27,17 +42,10 @@ client = OpenAI(
 )
 
 # =========================
-# MAP USER
+# USER MAP
 # =========================
 
 name_map = {
-    "869 🐢🎁🪯💰💲": "น้าปุ้ม",
-    "Mom": "แม่",
-    "Friend": "น้องเฟรนด์",
-    "PEMIKA'": "น้องป้อม",
-    "จินตนา ศรีจันทร์": "ป้าอ้อย",
-    "ปังปัง": "น้องปังคุง",
-    "เปิ้ล🌹💰💵💵💵💰🌹242": "น้าเปิ้ล",
     "Kaimook🌿🩵": "คุณไข่มุก"
 }
 
@@ -47,13 +55,19 @@ name_map = {
 
 def get_profile(user_id):
 
-    url = f"https://api.line.me/v2/bot/profile/{user_id}"
+    url = (
+        f"https://api.line.me/v2/bot/profile/{user_id}"
+    )
 
     headers = {
-        "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
+        "Authorization":
+        f"Bearer {CHANNEL_ACCESS_TOKEN}"
     }
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(
+        url,
+        headers=headers
+    )
 
     return response.json()
 
@@ -67,7 +81,8 @@ def reply_message(reply_token, text):
 
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
+        "Authorization":
+        f"Bearer {CHANNEL_ACCESS_TOKEN}"
     }
 
     data = {
@@ -80,7 +95,11 @@ def reply_message(reply_token, text):
         ]
     }
 
-    requests.post(url, headers=headers, json=data)
+    requests.post(
+        url,
+        headers=headers,
+        json=data
+    )
 
 # =========================
 # PUSH MESSAGE
@@ -92,7 +111,8 @@ def push_message(to, text):
 
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
+        "Authorization":
+        f"Bearer {CHANNEL_ACCESS_TOKEN}"
     }
 
     data = {
@@ -105,7 +125,11 @@ def push_message(to, text):
         ]
     }
 
-    requests.post(url, headers=headers, json=data)
+    requests.post(
+        url,
+        headers=headers,
+        json=data
+    )
 
 # =========================
 # GET IMAGE CONTENT
@@ -113,23 +137,32 @@ def push_message(to, text):
 
 def get_image_content(message_id):
 
-    url = f"https://api-data.line.me/v2/bot/message/{message_id}/content"
+    url = (
+        f"https://api-data.line.me/v2/bot/message/"
+        f"{message_id}/content"
+    )
 
     headers = {
-        "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
+        "Authorization":
+        f"Bearer {CHANNEL_ACCESS_TOKEN}"
     }
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(
+        url,
+        headers=headers
+    )
 
     return response.content
 
 # =========================
-# UPLOAD TO IMGBB
+# UPLOAD IMAGE
 # =========================
 
 def upload_to_imgbb(image_binary):
 
-    base64_image = base64.b64encode(image_binary)
+    base64_image = base64.b64encode(
+        image_binary
+    )
 
     url = "https://api.imgbb.com/1/upload"
 
@@ -138,9 +171,14 @@ def upload_to_imgbb(image_binary):
         "image": base64_image
     }
 
-    response = requests.post(url, data=payload)
+    response = requests.post(
+        url,
+        data=payload
+    )
 
     data = response.json()
+
+    print(data)
 
     return data["data"]["url"]
 
@@ -162,11 +200,12 @@ def analyze_order(image_url):
 
 กฎการดู:
 
-- ถ้ามีคำว่า "LINE MAN" สีเขียว หรือโลโก้ LINE MAN
+- ถ้ามีคำว่า "LINE MAN"
+หรือโลโก้สีเขียว
 ให้ตอบว่าเป็น LINE MAN
 
 - ถ้ามีรหัสแบบ "GF-xxx"
-หรือมีโลโก้ Grab สีเขียว
+หรือมีโลโก้ Grab
 ให้ตอบว่าเป็น GrabFood
 
 - ถ้ามีคำว่า ShopeeFood
@@ -185,11 +224,9 @@ def analyze_order(image_url):
 
 รายการอาหาร:
 - เมนู x จำนวน
-- เมนู x จำนวน
 
 หมายเหตุ:
-- ถ้ามีให้ใส่
-- ถ้าไม่มีไม่ต้องแสดง
+- ถ้ามี
 
 ยอดรวม: xx บาท
 
@@ -199,10 +236,9 @@ def analyze_order(image_url):
 
 กฎสำคัญ:
 - ห้ามมั่วข้อมูล
-- ถ้ามองไม่ชัดให้บอกว่า "ไม่ชัด"
-- อ่านตัวเลขให้แม่นที่สุด
-- ตอบเป็นภาษาไทย
-- จัดข้อความให้อ่านง่ายเหมือนสรุปออเดอร์ร้านอาหาร
+- ถ้ามองไม่ชัดให้บอกว่าไม่ชัด
+- อ่านตัวเลขให้แม่น
+- ตอบภาษาไทย
 """
             },
             {
@@ -231,7 +267,10 @@ def analyze_order(image_url):
 
 @app.get("/")
 def home():
-    return {"message": "AI BOT READY"}
+
+    return {
+        "message": "BOT ONLINE"
+    }
 
 # =========================
 # WEBHOOK
@@ -248,29 +287,47 @@ async def webhook(request: Request):
 
     for event in events:
 
+        # รับเฉพาะ message
         if event.get("type") != "message":
             continue
 
-        message_type = event["message"].get("type")
-
-        reply_token = event["replyToken"]
-
-        user_id = event["source"]["userId"]
+        # =========================
+        # ไม่รับข้อความจากกลุ่ม
+        # =========================
 
         source_type = event["source"]["type"]
 
-        # ไม่ตอบในกลุ่ม
         if source_type != "user":
+
+            print("ข้ามข้อความจากกลุ่ม")
+
             continue
+
         # =========================
-        # USER NAME
+        # MESSAGE TYPE
+        # =========================
+
+        message_type = event[
+            "message"
+        ].get("type")
+
+        reply_token = event[
+            "replyToken"
+        ]
+
+        user_id = event[
+            "source"
+        ]["userId"]
+
+        # =========================
+        # USER PROFILE
         # =========================
 
         profile = get_profile(user_id)
 
         display_name = profile.get(
             "displayName",
-            "คนในครอบครัว"
+            "Unknown"
         )
 
         real_name = name_map.get(
@@ -278,22 +335,23 @@ async def webhook(request: Request):
             display_name
         )
 
-        print(f"{real_name} ส่ง {message_type}")
+        print(
+            f"{real_name} ส่ง {message_type}"
+        )
 
         # =========================
-        # IMAGE MESSAGE
+        # IMAGE
         # =========================
 
         if message_type == "image":
 
             try:
 
-                print(f"{real_name} ส่งรูปมา 📸")
+                message_id = event[
+                    "message"
+                ]["id"]
 
-                # message id
-                message_id = event["message"]["id"]
-
-                # โหลดรูปจาก LINE
+                # โหลดรูป
                 image_binary = get_image_content(
                     message_id
                 )
@@ -305,7 +363,7 @@ async def webhook(request: Request):
 
                 print(image_url)
 
-                # AI อ่านออเดอร์
+                # AI อ่านรูป
                 summary = analyze_order(
                     image_url
                 )
@@ -334,14 +392,16 @@ async def webhook(request: Request):
                 )
 
         # =========================
-        # TEXT MESSAGE
+        # TEXT
         # =========================
 
         elif message_type == "text":
 
             try:
 
-                user_text = event["message"]["text"]
+                user_text = event[
+                    "message"
+                ]["text"]
 
                 push_message(
                     FAMILY_GROUP_ID,
@@ -362,4 +422,6 @@ async def webhook(request: Request):
                     "ส่งข้อความไม่สำเร็จ 😭"
                 )
 
-    return {"status": "ok"}
+    return {
+        "status": "ok"
+    }
