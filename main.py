@@ -243,5 +243,55 @@ async def webhook(request: Request):
                     reply_token,
                     "ส่งรูปไม่สำเร็จ 😭"
                 )
+        # =========================
+        # TEXT MESSAGE
+        # =========================
+
+        elif message_type == "text":
+
+            try:
+
+                user_text = event["message"]["text"]
+
+                url = "https://api.line.me/v2/bot/message/push"
+
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
+                }
+
+                data = {
+                    "to": FAMILY_GROUP_ID,
+                    "messages": [
+                        {
+                            "type": "text",
+                            "text": user_text
+                        }
+                    ]
+                }
+
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    json=data
+                )
+
+                print(response.status_code)
+                print(response.text)
+
+                reply_message(
+                    reply_token,
+                    "ส่งข้อความเข้ากลุ่มแล้ว 😼"
+                )
+
+            except Exception as e:
+
+                print("ERROR:", e)
+
+                reply_message(
+                    reply_token,
+                    "ส่งข้อความไม่สำเร็จ 😭"
+                )
 
     return {"status": "ok"}
+
