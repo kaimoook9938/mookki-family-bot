@@ -113,8 +113,7 @@ def upload_to_imgbb(image_binary):
 # PUSH IMAGE TO GROUP
 # =========================
 
-def push_image_to_group(image_url):
-
+def push_image_to_group(user_text, image_url):
     url = "https://api.line.me/v2/bot/message/push"
 
     headers = {
@@ -127,7 +126,7 @@ def push_image_to_group(image_url):
         "messages": [
             {
                 "type": "text",
-                "text": "มีออเดอร์มาแล้วจร้า 😼📦"
+                "text": "user_text"
             },
             {
                 "type": "image",
