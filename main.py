@@ -257,6 +257,11 @@ async def webhook(request: Request):
 
         user_id = event["source"]["userId"]
 
+        source_type = event["source"]["type"]
+
+        # ไม่ตอบในกลุ่ม
+        if source_type != "user":
+            continue
         # =========================
         # USER NAME
         # =========================
