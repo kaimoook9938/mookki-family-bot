@@ -107,6 +107,8 @@ def upload_to_imgbb(image_binary):
 
     data = response.json()
 
+    print(data)
+
     return data["data"]["url"]
 
 # =========================
@@ -137,7 +139,15 @@ def push_image_to_group(real_name, image_url):
         ]
     }
 
-    requests.post(url, headers=headers, json=data)
+    response = requests.post(
+        url,
+        headers=headers,
+        json=data
+    )
+
+    print(response.status_code)
+    print(response.text)
+
 # =========================
 # HOME
 # =========================
@@ -202,17 +212,27 @@ async def webhook(request: Request):
                 message_id = event["message"]["id"]
 
                 # โหลดรูปจาก LINE
-                image_binary = get_image_content(message_id)
+                image_binary = get_image_content(
+                    message_id
+                )
 
                 # upload imgbb
-                image_url = upload_to_imgbb(image_binary)
+                image_url = upload_to_imgbb(
+                    image_binary
+                )
 
                 print(image_url)
+
+                # ส่งเข้ากลุ่ม
+                push_image_to_group(
+                    real_name,
+                    image_url
+                )
 
                 # ตอบกลับคนส่ง
                 reply_message(
                     reply_token,
-                    "ส่งรูปเข้ากลุ่มครอบครัวแล้ว 😼"
+                    "ส่งรูปเข้ากลุ่มแล้ว 😼"
                 )
 
             except Exception as e:
