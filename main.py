@@ -126,7 +126,7 @@ def push_image_to_group(user_text, image_url):
         "messages": [
             {
                 "type": "text",
-                "text": "user_text"
+                "text": user_text
             },
             {
                 "type": "image",
