@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from dotenv import load_dotenv
+from openai import OpenAI
 import requests
 import os
 import base64
@@ -15,6 +16,15 @@ load_dotenv()
 CHANNEL_ACCESS_TOKEN = os.getenv("CHANNEL_ACCESS_TOKEN")
 FAMILY_GROUP_ID = os.getenv("FAMILY_GROUP_ID")
 IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# =========================
+# OPENAI
+# =========================
+
+client = OpenAI(
+    api_key=OPENAI_API_KEY
+)
 
 # =========================
 # MAP USER
@@ -32,7 +42,7 @@ name_map = {
 }
 
 # =========================
-# GET LINE PROFILE
+# GET PROFILE
 # =========================
 
 def get_profile(user_id):
@@ -73,7 +83,32 @@ def reply_message(reply_token, text):
     requests.post(url, headers=headers, json=data)
 
 # =========================
-# GET IMAGE FROM LINE
+# PUSH MESSAGE
+# =========================
+
+def push_message(to, text):
+
+    url = "https://api.line.me/v2/bot/message/push"
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
+    }
+
+    data = {
+        "to": to,
+        "messages": [
+            {
+                "type": "text",
+                "text": text
+            }
+        ]
+    }
+
+    requests.post(url, headers=headers, json=data)
+
+# =========================
+# GET IMAGE CONTENT
 # =========================
 
 def get_image_content(message_id):
@@ -89,7 +124,7 @@ def get_image_content(message_id):
     return response.content
 
 # =========================
-# UPLOAD IMAGE TO IMGBB
+# UPLOAD TO IMGBB
 # =========================
 
 def upload_to_imgbb(image_binary):
@@ -110,6 +145,50 @@ def upload_to_imgbb(image_binary):
     print(data)
 
     return data["data"]["url"]
+
+# =========================
+# AI READ ORDER IMAGE
+# =========================
+
+def analyze_order_image(image_url):
+
+    response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": """
+อ่านข้อความจากรูปออเดอร์อาหาร
+
+สรุปให้อ่านง่ายแบบนี้:
+
+ออเดอร์
+- เมนู x จำนวน
+
+ถ้ามีราคารวมให้บอกด้วย
+
+ตอบสั้น กระชับ
+"""
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "อ่านข้อความในรูปนี้"
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": image_url
+                        }
+                    }
+                ]
+            }
+        ]
+    )
+
+    return response.choices[0].message.content
 
 # =========================
 # PUSH IMAGE TO GROUP
@@ -181,7 +260,7 @@ async def webhook(request: Request):
         user_id = event["source"]["userId"]
 
         # =========================
-        # GET USER NAME
+        # USER NAME
         # =========================
 
         profile = get_profile(user_id)
@@ -223,16 +302,29 @@ async def webhook(request: Request):
 
                 print(image_url)
 
-                # ส่งเข้ากลุ่ม
+                # AI อ่านรูป
+                summary = analyze_order_image(
+                    image_url
+                )
+
+                print(summary)
+
+                # ส่งข้อความสรุปเข้ากลุ่ม
+                push_message(
+                    FAMILY_GROUP_ID,
+                    summary
+                )
+
+                # ส่งรูปเข้ากลุ่ม
                 push_image_to_group(
                     real_name,
                     image_url
                 )
 
-                # ตอบกลับคนส่ง
+                # ตอบกลับ
                 reply_message(
                     reply_token,
-                    "ส่งรูปเข้ากลุ่มแล้ว 😼"
+                    "ส่งออเดอร์เข้ากลุ่มแล้ว 😼"
                 )
 
             except Exception as e:
@@ -243,6 +335,7 @@ async def webhook(request: Request):
                     reply_token,
                     "ส่งรูปไม่สำเร็จ 😭"
                 )
+
         # =========================
         # TEXT MESSAGE
         # =========================
@@ -253,31 +346,10 @@ async def webhook(request: Request):
 
                 user_text = event["message"]["text"]
 
-                url = "https://api.line.me/v2/bot/message/push"
-
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
-                }
-
-                data = {
-                    "to": FAMILY_GROUP_ID,
-                    "messages": [
-                        {
-                            "type": "text",
-                            "text": user_text
-                        }
-                    ]
-                }
-
-                response = requests.post(
-                    url,
-                    headers=headers,
-                    json=data
+                push_message(
+                    FAMILY_GROUP_ID,
+                    user_text
                 )
-
-                print(response.status_code)
-                print(response.text)
 
                 reply_message(
                     reply_token,
@@ -294,4 +366,3 @@ async def webhook(request: Request):
                 )
 
     return {"status": "ok"}
-
