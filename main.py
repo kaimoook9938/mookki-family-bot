@@ -113,7 +113,7 @@ def upload_to_imgbb(image_binary):
 # PUSH IMAGE TO GROUP
 # =========================
 
-def push_image_to_group(user_text, image_url):
+def push_image_to_group(real_name, image_url):
 
     url = "https://api.line.me/v2/bot/message/push"
 
@@ -127,7 +127,7 @@ def push_image_to_group(user_text, image_url):
         "messages": [
             {
                 "type": "text",
-                "text": user_text
+                "text": f"{real_name} ส่งรูปมา 📸"
             },
             {
                 "type": "image",
@@ -138,7 +138,6 @@ def push_image_to_group(user_text, image_url):
     }
 
     requests.post(url, headers=headers, json=data)
-
 # =========================
 # HOME
 # =========================
@@ -209,9 +208,6 @@ async def webhook(request: Request):
                 image_url = upload_to_imgbb(image_binary)
 
                 print(image_url)
-
-                # ส่งรูปเข้ากลุ่ม
-                push_image_to_group(user_text, image_url)
 
                 # ตอบกลับคนส่ง
                 reply_message(
