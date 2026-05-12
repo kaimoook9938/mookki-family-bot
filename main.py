@@ -114,6 +114,7 @@ def upload_to_imgbb(image_binary):
 # =========================
 
 def push_image_to_group(user_text, image_url):
+
     url = "https://api.line.me/v2/bot/message/push"
 
     headers = {
@@ -210,7 +211,7 @@ async def webhook(request: Request):
                 print(image_url)
 
                 # ส่งรูปเข้ากลุ่ม
-                push_image_to_group(image_url)
+                push_image_to_group(user_text, image_url)
 
                 # ตอบกลับคนส่ง
                 reply_message(
