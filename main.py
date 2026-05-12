@@ -142,15 +142,13 @@ def upload_to_imgbb(image_binary):
 
     data = response.json()
 
-    print(data)
-
     return data["data"]["url"]
 
 # =========================
-# AI READ ORDER IMAGE
+# AI ANALYZE ORDER
 # =========================
 
-def analyze_order_image(image_url):
+def analyze_order(image_url):
 
     response = client.chat.completions.create(
         model="gpt-4.1-mini",
@@ -160,14 +158,26 @@ def analyze_order_image(image_url):
                 "content": """
 อ่านข้อความจากรูปออเดอร์อาหาร
 
-สรุปให้อ่านง่ายแบบนี้:
+ให้วิเคราะห์ว่าเป็น:
+- GrabFood
+- LINE MAN
+- ShopeeFood
 
-ออเดอร์
+แล้วสรุปให้อ่านง่ายแบบนี้:
+
+แพลตฟอร์ม: xxx
+เลขออเดอร์: xxxx
+
+รายการ:
 - เมนู x จำนวน
 
-ถ้ามีราคารวมให้บอกด้วย
+หมายเหตุ:
+- ถ้ามี
 
-ตอบสั้น กระชับ
+รวมทั้งหมด: xx บาท
+วิธีชำระเงิน: xxx
+
+ตอบสั้น อ่านง่าย
 """
             },
             {
@@ -189,43 +199,6 @@ def analyze_order_image(image_url):
     )
 
     return response.choices[0].message.content
-
-# =========================
-# PUSH IMAGE TO GROUP
-# =========================
-
-def push_image_to_group(real_name, image_url):
-
-    url = "https://api.line.me/v2/bot/message/push"
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
-    }
-
-    data = {
-        "to": FAMILY_GROUP_ID,
-        "messages": [
-            {
-                "type": "text",
-                "text": f"{real_name} ส่งรูปมา 📸"
-            },
-            {
-                "type": "image",
-                "originalContentUrl": image_url,
-                "previewImageUrl": image_url
-            }
-        ]
-    }
-
-    response = requests.post(
-        url,
-        headers=headers,
-        json=data
-    )
-
-    print(response.status_code)
-    print(response.text)
 
 # =========================
 # HOME
@@ -280,6 +253,7 @@ async def webhook(request: Request):
         # =========================
         # IMAGE MESSAGE
         # =========================
+
         if message_type == "image":
 
             try:
@@ -294,21 +268,21 @@ async def webhook(request: Request):
                     message_id
                 )
 
-                # upload imgbb
+                # upload รูป
                 image_url = upload_to_imgbb(
                     image_binary
                 )
 
                 print(image_url)
 
-                # AI อ่านรูป
-                summary = analyze_order_image(
+                # AI อ่านออเดอร์
+                summary = analyze_order(
                     image_url
                 )
 
                 print(summary)
 
-                # ส่งข้อความสรุปเข้ากลุ่ม
+                # ส่งเข้ากลุ่ม
                 push_message(
                     FAMILY_GROUP_ID,
                     summary
@@ -317,7 +291,7 @@ async def webhook(request: Request):
                 # ตอบกลับ
                 reply_message(
                     reply_token,
-                    "ส่งออเดอร์เข้ากลุ่มแล้ว 😼"
+                    "อ่านออเดอร์แล้ว 😼"
                 )
 
             except Exception as e:
@@ -326,7 +300,36 @@ async def webhook(request: Request):
 
                 reply_message(
                     reply_token,
-                    "ส่งรูปไม่สำเร็จ 😭"
+                    "อ่านรูปไม่สำเร็จ 😭"
+                )
+
+        # =========================
+        # TEXT MESSAGE
+        # =========================
+
+        elif message_type == "text":
+
+            try:
+
+                user_text = event["message"]["text"]
+
+                push_message(
+                    FAMILY_GROUP_ID,
+                    user_text
+                )
+
+                reply_message(
+                    reply_token,
+                    "ส่งข้อความเข้ากลุ่มแล้ว 😼"
+                )
+
+            except Exception as e:
+
+                print("ERROR:", e)
+
+                reply_message(
+                    reply_token,
+                    "ส่งข้อความไม่สำเร็จ 😭"
                 )
 
     return {"status": "ok"}
