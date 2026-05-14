@@ -1,5 +1,3 @@
-from urllib import response
-
 from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -112,8 +110,15 @@ def reply_message(reply_token, text):
         json=data
     )
 
-    print(response.status_code)
-    print(response.text)
+    print(
+        "REPLY STATUS:",
+        response.status_code
+    )
+
+    print(
+        "REPLY RESPONSE:",
+        response.text
+    )
 
 # =========================
 # PUSH MESSAGE
@@ -140,13 +145,21 @@ def push_message(to, text):
     }
 
     response = requests.post(
-    url,
-    headers=headers,
-    json=data
-)
+        url,
+        headers=headers,
+        json=data
+    )
 
-print("PUSH STATUS:", response.status_code)
-print("PUSH RESPONSE:", response.text)
+    print(
+        "PUSH STATUS:",
+        response.status_code
+    )
+
+    print(
+        "PUSH RESPONSE:",
+        response.text
+    )
+
 # =========================
 # GET IMAGE CONTENT
 # =========================
@@ -328,41 +341,34 @@ async def webhook(request: Request):
         if event.get("type") != "message":
             continue
 
-        # ไม่รับจากกลุ่ม
-        source_type = event["source"]["type"]
+        source = event.get("source", {})
 
-      #  if source_type != "user":
+        source_type = source.get("type")
 
-       #     print("ข้ามข้อความจากกลุ่ม")
+        message = event.get("message", {})
 
-        #    continue
+        message_type = message.get("type")
 
-        # =========================
-        # MESSAGE TYPE
-        # =========================
+        reply_token = event.get("replyToken")
 
-        message_type = event[
-            "message"
-        ].get("type")
-
-        reply_token = event[
-            "replyToken"
-        ]
-
-        user_id = event[
-            "source"
-        ]["userId"]
+        user_id = source.get("userId")
 
         # =========================
         # USER PROFILE
         # =========================
 
-        profile = get_profile(user_id)
+        if user_id:
 
-        display_name = profile.get(
-            "displayName",
-            "Unknown"
-        )
+            profile = get_profile(user_id)
+
+            display_name = profile.get(
+                "displayName",
+                "Unknown"
+            )
+
+        else:
+
+            display_name = "GROUP USER"
 
         real_name = name_map.get(
             display_name,
@@ -381,9 +387,7 @@ async def webhook(request: Request):
 
             try:
 
-                message_id = event[
-                    "message"
-                ]["id"]
+                message_id = message["id"]
 
                 # โหลดรูป
                 image_binary = get_image_content(
@@ -436,9 +440,7 @@ async def webhook(request: Request):
 
             try:
 
-                user_text = event[
-                    "message"
-                ]["text"]
+                user_text = message["text"]
 
                 # =====================
                 # SUMMARY COMMAND
