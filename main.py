@@ -49,6 +49,7 @@ name_map = {
     "Kaimook🌿🩵": "คุณไข่มุก"
 }
 
+daily_orders = []
 # =========================
 # GET PROFILE
 # =========================
@@ -204,10 +205,6 @@ def analyze_order(image_url):
 หรือโลโก้สีเขียว
 ให้ตอบว่าเป็น LINE MAN
 
-- ถ้ามีรหัสแบบ "GF-xxx"
-หรือมีโลโก้ Grab
-ให้ตอบว่าเป็น GrabFood
-
 - ถ้ามีคำว่า ShopeeFood
 หรือธีมสีส้ม
 ให้ตอบว่าเป็น ShopeeFood
@@ -260,6 +257,29 @@ def analyze_order(image_url):
     )
 
     return response.choices[0].message.content
+
+
+# =========================
+# DAILY SUMMARY
+# =========================
+
+def daily_summary():
+
+    total_orders = len(daily_orders)
+
+    summary_text = f"""
+📊 สรุปวันนี้
+
+จำนวนออเดอร์:
+{total_orders}
+"""
+
+    push_message(
+        FAMILY_GROUP_ID,
+        summary_text
+    )
+
+    daily_orders.clear()
 
 # =========================
 # HOME
@@ -370,6 +390,8 @@ async def webhook(request: Request):
 
                 print(summary)
 
+                daily_orders.append(summary)
+
                 # ส่งเข้ากลุ่ม
                 push_message(
                     FAMILY_GROUP_ID,
@@ -390,7 +412,6 @@ async def webhook(request: Request):
                     reply_token,
                     "อ่านรูปไม่สำเร็จ 😭"
                 )
-
         # =========================
         # TEXT
         # =========================
@@ -402,6 +423,21 @@ async def webhook(request: Request):
                 user_text = event[
                     "message"
                 ]["text"]
+
+                # =====================
+                # SUMMARY COMMAND
+                # =====================
+
+                if user_text == "/summary":
+
+                    daily_summary()
+
+                    reply_message(
+                        reply_token,
+                        "ส่งสรุปรายวันแล้ว 😼"
+                    )
+
+                    continue
 
                 push_message(
                     FAMILY_GROUP_ID,
@@ -421,6 +457,7 @@ async def webhook(request: Request):
                     reply_token,
                     "ส่งข้อความไม่สำเร็จ 😭"
                 )
+
 
     return {
         "status": "ok"
