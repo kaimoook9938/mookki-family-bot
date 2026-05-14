@@ -330,11 +330,11 @@ async def webhook(request: Request):
         # ไม่รับจากกลุ่ม
         source_type = event["source"]["type"]
 
-        if source_type != "user":
+      #  if source_type != "user":
 
-            print("ข้ามข้อความจากกลุ่ม")
+       #     print("ข้ามข้อความจากกลุ่ม")
 
-            continue
+        #    continue
 
         # =========================
         # MESSAGE TYPE
