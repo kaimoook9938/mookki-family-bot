@@ -346,11 +346,11 @@ async def webhook(request: Request):
         source_type = source.get("type")
 
         # รับเฉพาะแชตส่วนตัว
-        if source_type != "user":
+      #  if source_type != "user":
 
-            print("ข้ามข้อความจากกลุ่ม")
+       #     print("ข้ามข้อความจากกลุ่ม")
 
-            continue
+       #     continue
 
         message = event.get("message", {})
 
