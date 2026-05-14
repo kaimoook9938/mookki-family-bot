@@ -27,6 +27,9 @@ OPENAI_API_KEY = os.getenv(
     "OPENAI_API_KEY"
 )
 
+print("TOKEN:", CHANNEL_ACCESS_TOKEN)
+print("GROUP:", FAMILY_GROUP_ID)
+
 # =========================
 # APP
 # =========================
@@ -49,7 +52,12 @@ name_map = {
     "Kaimook🌿🩵": "คุณไข่มุก"
 }
 
+# =========================
+# DAILY ORDERS
+# =========================
+
 daily_orders = []
+
 # =========================
 # GET PROFILE
 # =========================
@@ -96,11 +104,14 @@ def reply_message(reply_token, text):
         ]
     }
 
-    requests.post(
+    response = requests.post(
         url,
         headers=headers,
         json=data
     )
+
+    print(response.status_code)
+    print(response.text)
 
 # =========================
 # PUSH MESSAGE
@@ -126,11 +137,14 @@ def push_message(to, text):
         ]
     }
 
-    requests.post(
+    response = requests.post(
         url,
         headers=headers,
         json=data
     )
+
+    print(response.status_code)
+    print(response.text)
 
 # =========================
 # GET IMAGE CONTENT
@@ -201,9 +215,12 @@ def analyze_order(image_url):
 
 กฎการดู:
 
-- ถ้ามีคำว่า "LINE MAN"
+- ถ้ามีคำว่า LINE MAN
 หรือโลโก้สีเขียว
 ให้ตอบว่าเป็น LINE MAN
+
+- ถ้ามีคำว่า Grab
+ให้ตอบว่าเป็น GrabFood
 
 - ถ้ามีคำว่า ShopeeFood
 หรือธีมสีส้ม
@@ -258,7 +275,6 @@ def analyze_order(image_url):
 
     return response.choices[0].message.content
 
-
 # =========================
 # DAILY SUMMARY
 # =========================
@@ -311,10 +327,7 @@ async def webhook(request: Request):
         if event.get("type") != "message":
             continue
 
-        # =========================
-        # ไม่รับข้อความจากกลุ่ม
-        # =========================
-
+        # ไม่รับจากกลุ่ม
         source_type = event["source"]["type"]
 
         if source_type != "user":
@@ -390,6 +403,7 @@ async def webhook(request: Request):
 
                 print(summary)
 
+                # เก็บ order
                 daily_orders.append(summary)
 
                 # ส่งเข้ากลุ่ม
@@ -412,6 +426,7 @@ async def webhook(request: Request):
                     reply_token,
                     "อ่านรูปไม่สำเร็จ 😭"
                 )
+
         # =========================
         # TEXT
         # =========================
@@ -439,11 +454,13 @@ async def webhook(request: Request):
 
                     continue
 
+                # ส่งข้อความเข้ากลุ่ม
                 push_message(
                     FAMILY_GROUP_ID,
                     user_text
                 )
 
+                # reply กลับ
                 reply_message(
                     reply_token,
                     "ส่งข้อความเข้ากลุ่มแล้ว 😼"
@@ -457,7 +474,6 @@ async def webhook(request: Request):
                     reply_token,
                     "ส่งข้อความไม่สำเร็จ 😭"
                 )
-
 
     return {
         "status": "ok"
