@@ -1,3 +1,5 @@
+from urllib import response
+
 from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -138,14 +140,13 @@ def push_message(to, text):
     }
 
     response = requests.post(
-        url,
-        headers=headers,
-        json=data
-    )
+    url,
+    headers=headers,
+    json=data
+)
 
-    print(response.status_code)
-    print(response.text)
-
+print("PUSH STATUS:", response.status_code)
+print("PUSH RESPONSE:", response.text)
 # =========================
 # GET IMAGE CONTENT
 # =========================
